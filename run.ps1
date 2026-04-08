@@ -5,11 +5,11 @@ $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.2.10-hotspot"
 $env:Path = "$env:Path;$env:JAVA_HOME\bin;$env:USERPROFILE\apache-maven\apache-maven-3.9.9\bin"
 
 # Free port 8080 if already in use
-$occupied = netstat -ano | findstr :8080
+$occupied = netstat -ano | findstr ":8080 "
 if ($occupied) {
-    $pid = ($occupied -split '\s+')[-1]
-    Write-Host "Freeing port 8080 (PID $pid)..."
-    taskkill /PID $pid /F | Out-Null
+    $processPid = ($occupied -split '\s+' | Where-Object { $_ -match '^\d+$' } | Select-Object -Last 1)
+    Write-Host "Freeing port 8080 (PID $processPid)..."
+    taskkill /PID $processPid /F | Out-Null
 }
 
 Write-Host "Starting Task Manager..."
