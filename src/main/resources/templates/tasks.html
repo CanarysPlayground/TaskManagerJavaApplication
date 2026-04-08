@@ -1,11 +1,141 @@
 
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><title>Tasks</title></head>
+<head>
+  <title>Task Manager</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; }
+
+    header {
+      background: #1a73e8;
+      color: white;
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    header h1 { font-size: 1.6rem; letter-spacing: 0.5px; }
+    header span { font-size: 0.95rem; opacity: 0.85; }
+
+    .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+
+    .summary-bar {
+      background: white;
+      border-radius: 10px;
+      padding: 16px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .summary-bar .badge {
+      background: #1a73e8;
+      color: white;
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .summary-bar p { color: #555; font-size: 0.95rem; }
+
+    .search-box {
+      width: 100%;
+      padding: 11px 16px;
+      font-size: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-box:focus { border-color: #1a73e8; }
+
+    .task-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .task-card {
+      background: white;
+      border-radius: 10px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      transition: box-shadow 0.2s, transform 0.15s;
+    }
+    .task-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.13); transform: translateY(-2px); }
+
+    .task-id {
+      background: #e8f0fe;
+      color: #1a73e8;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 6px;
+      padding: 4px 8px;
+      min-width: 36px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .task-title {
+      font-size: 0.92rem;
+      line-height: 1.45;
+      color: #333;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #888;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
 <body>
-<h2>Task List</h2>
-<ul>
- <li th:each="t:${tasks}" th:text="${t.title}"></li>
-</ul>
+
+<header>
+  <h1>Task Manager</h1>
+  <span th:text="'Total Tasks: ' + ${#lists.size(tasks)}"></span>
+</header>
+
+<div class="container">
+
+  <div class="summary-bar">
+    <span class="badge" th:text="${#lists.size(tasks)}"></span>
+    <p>tasks are currently loaded and ready to manage.</p>
+  </div>
+
+  <input class="search-box" type="text" id="searchInput" placeholder="Search tasks..." onkeyup="filterTasks()" />
+
+  <div class="task-grid" id="taskGrid">
+    <div class="task-card" th:each="t : ${tasks}">
+      <span class="task-id" th:text="'#' + ${t.id}"></span>
+      <span class="task-title" th:text="${t.title}"></span>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Task Manager &mdash; Spring Boot + Thymeleaf
+</footer>
+
+<script>
+  function filterTasks() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('.task-card');
+    cards.forEach(card => {
+      const title = card.querySelector('.task-title').textContent.toLowerCase();
+      card.style.display = title.includes(query) ? '' : 'none';
+    });
+  }
+</script>
+
 </body>
 </html>
