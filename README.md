@@ -1,6 +1,6 @@
 # Task Manager Java Application
 
-A simple Task Manager web application built with **Spring Boot 3**, **Thymeleaf**, and **Maven**. It exposes a browser-based UI as well as a REST API to create and view tasks stored in memory.
+A Task Manager web application built with **Spring Boot 3**, **Thymeleaf**, and **Maven**. It comes pre-loaded with 100 tasks, exposes a styled browser UI, and provides a REST API — all backed by in-memory storage.
 
 ---
 
@@ -8,11 +8,11 @@ A simple Task Manager web application built with **Spring Boot 3**, **Thymeleaf*
 
 | Layer | Technology |
 |---|---|
-| Language | Java (JDK 17+) |
+| Language | Java 25 (Eclipse Temurin) |
 | Framework | Spring Boot 3.2.4 |
-| Web MVC | Spring Web (embedded Tomcat) |
+| Web MVC | Spring Web (embedded Tomcat on port 8080) |
 | Templating | Thymeleaf |
-| Build Tool | Apache Maven |
+| Build Tool | Apache Maven 3.9.9 |
 | Packaging | Executable JAR |
 
 ---
@@ -21,7 +21,9 @@ A simple Task Manager web application built with **Spring Boot 3**, **Thymeleaf*
 
 ```
 TaskManagerJavaApplication/
+├── .gitignore                                       # Excludes target/, IDE files
 ├── pom.xml                                          # Maven build descriptor
+├── run.ps1                                          # One-click Windows run script
 └── src/
     └── main/
         ├── java/com/example/taskmanager/
@@ -30,7 +32,7 @@ TaskManagerJavaApplication/
         │   └── TaskController.java                  # MVC + REST controller
         └── resources/
             └── templates/
-                └── tasks.html                       # Thymeleaf HTML view
+                └── tasks.html                       # Thymeleaf UI view
 ```
 
 ---
@@ -38,83 +40,93 @@ TaskManagerJavaApplication/
 ## Code Architecture
 
 ### 1. Entry Point — `TaskManagerApplication.java`
-Bootstraps the Spring Boot application using `@SpringBootApplication`, which enables auto-configuration, component scanning, and an embedded Tomcat server.
+Bootstraps the Spring Boot application using `@SpringBootApplication`, enabling auto-configuration, component scanning, and an embedded Tomcat server.
 
 ### 2. Domain Model — `Task.java`
-A plain Java object (POJO) representing a task with two fields:
+A plain Java object (POJO) with two fields:
 - `id` — auto-assigned `Long` identifier
 - `title` — text description of the task
 
-No persistence layer is used; tasks are stored in an in-memory `ArrayList` for the lifetime of the application.
-
 ### 3. Controller — `TaskController.java`
-A single `@Controller` class that serves both the HTML UI and the REST API:
+A single `@Controller` class serving both the HTML UI and REST API.
 
-| Method | Path | Type | Description |
+- Uses `@PostConstruct` to pre-load **100 tasks** into memory at startup.
+- Tasks are stored in an in-memory `ArrayList` — no database required.
+
+| Method | URL | Type | Description |
 |---|---|---|---|
-| `GET` | `/` | HTML (MVC) | Renders the task list via Thymeleaf |
-| `GET` | `/api/tasks` | REST (`application/json`) | Returns all tasks as JSON |
-| `POST` | `/api/tasks` | REST (`application/json`) | Accepts a JSON body, auto-assigns an ID, and saves the task |
+| `GET` | `/tasks` | HTML (MVC) | Renders the full task list UI via Thymeleaf |
+| `GET` | `/api/tasks` | REST JSON | Returns all tasks as a JSON array |
+| `POST` | `/api/tasks` | REST JSON | Adds a new task, auto-assigns ID |
 
 ### 4. View — `tasks.html`
-A Thymeleaf template that iterates over the `tasks` model attribute and renders each task title as a list item.
+A Thymeleaf template with:
+- Header showing total task count
+- Live search bar (JavaScript filter)
+- Responsive card grid — each card shows the task ID badge and title
+
+---
+
+## Live URLs
+
+| Purpose | URL |
+|---|---|
+| Task list UI | http://localhost:8080/tasks |
+| REST API — all tasks | http://localhost:8080/api/tasks |
 
 ---
 
 ## How to Run
 
 ### Prerequisites
-- Java 17 or later
+- Java 17+ (tested with Eclipse Temurin 25)
 - Apache Maven 3.6+
 
-### Steps
+### Option 1 — One-click script (Windows)
+```powershell
+powershell -ExecutionPolicy Bypass -File run.ps1
+```
+The script automatically sets Java/Maven paths and frees port 8080 if occupied.
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/CanarysPlayground/TaskManagerJavaApplication.git
-   cd TaskManagerJavaApplication
-   ```
+### Option 2 — Manual
+```powershell
+# Set paths (only needed if not permanently set)
+$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.2.10-hotspot"
+$env:Path = "$env:Path;$env:JAVA_HOME\bin;$env:USERPROFILE\apache-maven\apache-maven-3.9.9\bin"
 
-2. **Build the project**
-   ```bash
-   mvn clean package
-   ```
+# Navigate to project and run
+cd TaskManagerJavaApplication
+mvn spring-boot:run
+```
 
-3. **Run the application**
-   ```bash
-   mvn spring-boot:run
-   ```
-   Or run the packaged JAR:
-   ```bash
-   java -jar target/taskmanager-0.0.1-SNAPSHOT.jar
-   ```
+### Option 3 — Clone and run
+```bash
+git clone https://github.com/CanarysPlayground/TaskManagerJavaApplication.git
+cd TaskManagerJavaApplication
+mvn spring-boot:run
+```
 
-4. **Open in browser**
-   ```
-   http://localhost:8080/
-   ```
+Then open: **http://localhost:8080/tasks**
 
 ---
 
 ## API Usage
 
 ### Get all tasks
-```bash
-curl http://localhost:8080/api/tasks
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8080/api/tasks"
 ```
 
 ### Add a new task
-```bash
-curl -X POST http://localhost:8080/api/tasks \
-     -H "Content-Type: application/json" \
-     -d '{"title": "Buy groceries"}'
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8080/api/tasks" -Method POST -ContentType "application/json" -Body '{"title": "My new task"}'
 ```
 
 **Response:**
 ```json
 {
-  "id": 1,
-  "title": "Buy groceries"
+  "id": 101,
+  "title": "My new task"
 }
 ```
 
@@ -122,6 +134,6 @@ curl -X POST http://localhost:8080/api/tasks \
 
 ## Notes
 
-- Tasks are stored **in memory only** — they are lost when the application restarts.
+- Tasks are stored **in memory only** — they reset when the app restarts.
+- 100 tasks are pre-loaded on every startup via `@PostConstruct`.
 - No database or authentication is configured; this is a demo project.
-- To persist tasks across restarts, integrate Spring Data JPA with an embedded H2 or external database.
